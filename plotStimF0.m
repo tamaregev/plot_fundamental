@@ -2,55 +2,24 @@ function [h,f0_in,t0_in] = plotStimF0(y,fs,params)
 % plotStimF0 Calculates fundamental frequency using STRAIGHT, cleans it and plots signal+f0+spectrogram
 % 
 % Uses: STRAIGHT (Hideki Kawahara)
-%       ERPfigure (HCNL)
 %       myspectrogram (by Kamil Wojcicki, Mathworks file exchange) - https://www.mathworks.com/matlabcentral/fileexchange/29596-speech-spectrogram
 %
 % Inputs: params is a structure
 %          Example:
-%               params.th_f0power = 0.017;
-%               params.th_df = 10;%Hz
-%
+%               params.th_f0power = 0.017;threshold f0 power for plotting f0
+%               params.th_df = 10;%Hz maximal f0 jump for plotting f0
+%               params.conv = 5;
+
 %
 % Tamar Regev, June 2020
 %% Definitions
 dropbox_dir = '/Users/tamaregev/Dropbox/';
-%STRAIGHTFolder = [dropbox_dir 'MATLAB/lab/STRAIGHT/baseTamdemSTRAIGHTV009m/baseTamdemSTRAIGHTV009m'];
-STRAIGHTFolder2 = [dropbox_dir 'MATLAB/lab/STRAIGHT/STRAIGHT/2015/TandemSTRAIGHTmonolithicPackage010'];
-CommonResources = [dropbox_dir 'MATLAB/lab/CommonResources'];
-%addpath(STRAIGHTFolder)
-addpath(STRAIGHTFolder2)
-addpath(CommonResources)
+STRAIGHTFolder = [dropbox_dir 'MATLAB/lab/STRAIGHT/STRAIGHT/2015/TandemSTRAIGHTmonolithicPackage010'];
+addpath(STRAIGHTFolder)
 addpath([dropbox_dir filesep 'MATLAB/lab/myFunctions/downloaded/myspectrogram'])
 
 %% Analysis
 t = (0:length(y)-1)/fs;
-% windowLength = round(0.05*fs);
-% overlapLength = round(0.04*fs);
-% hopLength = windowLength - overlapLength;
-% [f0,idx]=pitch(yt,fs, ...
-%     'WindowLength',windowLength, ...
-%     'OverlapLength',overlapLength, ...
-%     'Range',[50 250], ...
-%     'MedianFilterLength',3);
-% t0 = (idx - 1)/fs;   
-%      
-% buffer = dsp.AsyncBuffer(numel(yt));
-% write(buffer,yt);
-% VAD = voiceActivityDetector;
-% n = 1;
-% probabilityVector = zeros(numel(idx),1);
-% while buffer.NumUnreadSamples >= hopLength
-%     if n==1
-%         x = read(buffer,windowLength);
-%     else
-%         x = read(buffer,windowLength,overlapLength);
-%     end
-%     probabilityVector(n) = VAD(x);
-%     n = n+1;
-% end
-% validIdx = probabilityVector>0.99;
-% idx(~validIdx) = nan;
-% f0(~validIdx) = nan;
 
 r = exF0candidatesTSTRAIGHTGB(y,fs); % Extract F0 information
 rc = autoF0Tracking(r,y); % Clean F0 trajectory by tracking
@@ -58,16 +27,6 @@ rc.vuv = refineVoicingDecision(y,rc);
 q = aperiodicityRatioSigmoid(y,rc,1,2,0); % aperiodicity extraction
 f = exSpectrumTSTRAIGHTGB(y,fs,q); 
 
-% STRAIGHTobject.waveform = y;
-% STRAIGHTobject.samplingFrequency = fs;
-% STRAIGHTobject.refinedF0Structure.temporalPositions = r.temporalPositions;
-% STRAIGHTobject.SpectrumStructure.spectrogramSTRAIGHT = f.spectrogramSTRAIGHT;
-% STRAIGHTobject.refinedF0Structure.vuv = rc.vuv;
-% f.spectrogramSTRAIGHT = unvoicedProcessing(STRAIGHTobject);
-% sgramSTRAIGHT = 10*log10(f.spectrogramSTRAIGHT);
-% maxLevel = max(max(sgramSTRAIGHT));
-
-     
     f0power = q.f0candidatesPowerMap(1,:)';
     f0_in = rc.f0;
     t0_in=rc.temporalPositions;
@@ -87,11 +46,12 @@ f = exSpectrumTSTRAIGHTGB(y,fs,q);
     %exclude isolated points:
 %     
     %smooth:
-   f0_in=conv(f0_in,[1 1 1 1 1]/5,'same');
+    convolution = ones(1,params.conv)/params.conv;
+   f0_in=conv(f0_in,convolution,'same');
    
 
 %% plot
-h=ERPfigure;
+h=figure;
      subplot(3,1,1); plot(t,y);xlim([0 t(end)]); grid on
      set(gca,'fontsize',14)
 %      subplot(7,1,2); plot(t0,f0); grid on
