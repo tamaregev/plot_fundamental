@@ -13,10 +13,9 @@ function [h,f0_in,t0_in] = plotStimF0(y,fs,params)
 %
 % Tamar Regev, June 2020
 %% Definitions
-dropbox_dir = '/Users/tamaregev/Dropbox/';
-STRAIGHTFolder = [dropbox_dir 'MATLAB/lab/STRAIGHT/STRAIGHT/2015/TandemSTRAIGHTmonolithicPackage010'];
+STRAIGHTFolder = 'GitHub/plot_fundamental/STRAIGHT/TandemSTRAIGHTmonolithicPackage010';
 addpath(STRAIGHTFolder)
-addpath([dropbox_dir filesep 'MATLAB/lab/myFunctions/downloaded/myspectrogram'])
+addpath(['GitHub/plot_fundamental/myspectrogram'])
 
 %% Analysis
 t = (0:length(y)-1)/fs;
