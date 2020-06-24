@@ -8,7 +8,7 @@ function [h,f0_in,t0_in] = plotStimF0(y,fs,params, showProcess)
 %
 %          params is a structure
 %          Example:
-%               params.th_f0score = 0.75;threshold f0 score for plotting f0 (score is 0 to 1)
+%               params.th_f0score = 0.75;%threshold f0 score for plotting f0 (score is 0 to 1)
 %               params.th_df = 95;%Percentile maximal f0 jump for plotting f0
 %               params.conv = 5;
 %
@@ -102,9 +102,10 @@ t0_in(f0score<th_f0score)=nan;
         
     %%% plot fundamental 
     subplot(3,1,2)
-    plot(t0_in,f0_in,'.');grid on
+    %plot(t0_in,f0_in,'.');grid on
+    semilogy(t0_in,f0_in,'.');grid on
     ylabel('f0 (Hz)');
-    ylim([50 350])
+    ylim([100 350])
     xlim([0 t(end)])
     set(gca,'fontsize',14)
     
