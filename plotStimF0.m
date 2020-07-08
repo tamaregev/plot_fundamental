@@ -97,8 +97,8 @@ t0_in(f0score<th_f0score)=nan;
 
 % map score range to 0-1
 colors = f0score;colors(f0score<th_f0score)=nan;
-colors=colors-params.th_f0score;colors=colors/(1-params.th_f0score);
-
+colors=colors-params.th_f0score;colors=0.8*colors/(1-params.th_f0score)+0.2;
+colors = 1-colors;
 %% plot
     h=figure;
     
@@ -109,13 +109,11 @@ colors=colors-params.th_f0score;colors=colors/(1-params.th_f0score);
     %%% plot fundamental 
     subplot(3,1,2)
     %plot(t0_in,f0_in,'.');grid on
-    colormap(gca,'gray')
-    scatter(t0_in,f0_in,15,[colors],'filled');grid on
-    set(gca,'yscale','log')
-    ylim([50 350])
-    
+    %colormap(gca,'gray')
+    scatter(t0_in,f0_in,15,[colors colors colors],'filled');grid on
+    set(gca,'yscale','log')    
     ylabel('f0 (Hz)');
-    ylim([100 350])
+    ylim([50 400])
     xlim([0 t(end)])
     set(gca,'fontsize',14)
     
