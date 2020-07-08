@@ -1,4 +1,4 @@
-function [h,f0_in,t0_in] = plotf0morphs(params, folder)
+function [h,f0_in,t0_in] = plotf0morphs(params, folder, tag)
 % plotf0morphs calculates fundamental frequency using STRAIGHT, cleans it and
 % plots f0 of all wav files of continuum
 % 
@@ -10,23 +10,22 @@ function [h,f0_in,t0_in] = plotf0morphs(params, folder)
 %               params.th_df = 95;%Percentile maximal f0 jump for plotting f0
 %               params.conv = 5;
 %         
-%          folder is a string 'LD_xxxxxxxxx', the name of the folder
-%          containing stimuli. This folder is in a folder called Stimuli
-%          for plotf0morphs
+%          folder is a string, the full path to the folder
+%          containing stimuli.
+%
+
 %
 % Based on plotStimF0 (Tamar Regev)
 % June 22, 2020 Julie Meng
-% 
+% July 8, 2020 Tamar Regev: changed inputs such that folder is the full
+% folder and tag is the title for the figure.
+
 %% Definitions
-function_dir = '/Users/julie/Downloads/ProsodyUROP';
-cd '/Users/julie/Downloads/ProsodyUROP'
-STRAIGHTFolder = [function_dir 'plot_fundamental-master/STRAIGHT/TandemSTRAIGHTmonolithicPackage010'];
-MorphFiles = [function_dir 'Stimuli for plotf0morphs/LD_neutral to 1stthehigh morph 1'];
-addpath(STRAIGHTFolder)
-addpath(MorphFiles)
+function_dir = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/GitHub/prosody_meaning';
+addpath(genpath(function_dir))
 
 %% Analysis
-Files = dir(strcat('Stimuli for plotf0morphs/', folder, '/*.wav'));
+Files = dir([folder, '/*.wav']);
 
 FileNames = string.empty;
 for k=1:length(Files)
@@ -39,7 +38,7 @@ for k=1:length(FileNames)
 end
 
 for index = 1:length(FileNames)
-    [y,fs] = audioread(FileNames(index)); %read audio file
+    [y,fs] = audioread([folder filesep FileNames{index}]); %read audio file
     
     t = (0:length(y)-1)/fs;
 
@@ -59,7 +58,7 @@ for index = 1:length(FileNames)
     %th_f0power=prctile(q.f0candidatesPowerMap(1,:),45);
 
     %select areas with high f0 score   
-    th_f0score =  params.th_f0score;%typically 0.75
+    th_f0score = params.th_f0score;%typically 0.75
 
     %select areas with big jumps:
     th_df=prctile(diff(f0_in),params.th_df);
@@ -87,9 +86,9 @@ for index = 1:length(FileNames)
     elseif index == length(FileNames)
         semilogy(t0_in,f0_in,'.')
         ylabel('f0 (Hz)');
-        ylim([100 350])
+        ylim([100 450])
         xlim([0 t(end)])
-        title(strrep(folder, "_", " "))
+        title(strrep(tag, "_", " "))
         set(gca,'fontsize',14)
         hold off
         
