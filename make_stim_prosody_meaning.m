@@ -1,7 +1,7 @@
 %% Definitions
 
 dropbox_dir = '/Users/tamaregev/Dropbox/';
-stim_dir = [dropbox_dir 'postdoc/Fedorenko/Prosody/Prosody-meaning/stimuli/'];
+stim_folder = [dropbox_dir 'postdoc/Fedorenko/Prosody/Prosody-meaning/stimuli/'];
 CommonResources = [dropbox_dir 'MATLAB/lab/CommonResources'];
 myFunctions = '/Users/tamaregev/Dropbox/MATLAB/lab/myFunctions';
 addpath(genpath(myFunctions))
@@ -12,8 +12,8 @@ speakers = {'WP','HK'};
 %% Trim
 speaker = speakers{1};
 sent = 20;
-raw_folder = [stim_dir speaker '/raw/Sent' num2str(sent) '/'];
-trim_folder = [stim_dir speaker '/trim/Sent' num2str(sent) '/'];
+raw_folder = [stim_folder speaker '/raw/Sent' num2str(sent) '/'];
+trim_folder = [stim_folder speaker '/trim/Sent' num2str(sent) '/'];
 if ~exist(trim_folder,'dir')
     mkdir(trim_folder)
 end
@@ -51,13 +51,17 @@ hst=suptitle(strrep(filename,'_',' '));
 set(hst,'fontsize',16)
 %% Synth + manipulate
 % https://docs.google.com/document/d/16xgOOVTrYqTQIVgNmAheyNmt1VvdPhlqmS4GwwnkkU4/edit
+synth_folder = [stim_folder speaker '/synth/Sent' num2str(sent) '/'];
+if ~exist(synth_folder,'dir')
+    mkdir(synth_folder)
+end
 TandemSTRAIGHThandler
 %I saved the synth versions with the prefix 'Syn' (this was automatically
-%assigned by STRAIGHT)
+%assigned by STRAIGHT) into the synth_folder manually from STRAIGHT GUI
 %% Match length
 speaker = speakers{1};
 sent = 20;
-synth_folder = [stim_dir speaker '/synth/Sent' num2str(sent) '/'];
+synth_folder = [stim_folder speaker '/synth/Sent' num2str(sent) '/'];
 category = 'N';version = 1;
 prefix = 'Syn';
 filename = [prefix num2str(sent) '_' category '_' num2str(version)];
@@ -71,11 +75,15 @@ y=y(1:nSamps);
 audiowrite([synth_folder filename '.wav'],y,fs)
 %% Morph
 % https://memcauliffe.com/straight_workshop/morphing.html
+morph_folder = [stim_folder speaker '/morph/Sent' num2str(sent) '/'];
+if ~exist(morph_folder,'dir')
+    mkdir(morph_folder)
+end
 MorphingMenu
 %% plot morph continuum
 
-folder = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/morphSin/HarmonicContinuum5';
-[h,f0_in,t0_in] = plotf0morphs(params, folder, 'Harmonic Continuum 5');
+folder = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/stimuli/WP/morph/20_N_Q_5';
+[h,f0_in,t0_in] = plotf0morphs(params, folder, '20_N_Q_5');
 %% Test morphing continuum
 % here I synthesized harmonic tones iwht a single f0, and morphed them
 % with STRAIGHT to discover the spacing of the morph and the logarithmic
