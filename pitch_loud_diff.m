@@ -1,14 +1,14 @@
-function [delta_pitch, delta_loud] = pitch_loud_diff(stimulus_1,stimulus_2,params)
+function [delta_pitch, delta_loud, t, p1,p2,l1,l2] = pitch_loud_diff(stimulus_1,stimulus_2,params)
 %               params.th_f0score = 0.75; %threshold f0 power for plotting f0
-%               params.th_df = 95; %Hz maximal f0 jump for plotting f0
+%               params.th_df = 85; %Hz maximal f0 jump for plotting f0
 %               params.conv = 5;
 %               params.my_cal_factor = 1.0;  %the value for your system to convert the WAV into Pascals
 
 %%
-function_dir = 'C:\Users\user\Downloads\prosody_meaning-master\prosody_meaning-master\';
-STRAIGHTFolder = [function_dir '\STRAIGHT\TandemSTRAIGHTmonolithicPackage010'];
-addpath(STRAIGHTFolder)
-addpath([function_dir '\myspectrogram'])
+% function_dir = 'C:\Users\user\Downloads\prosody_meaning-master\prosody_meaning-master\';
+% STRAIGHTFolder = [function_dir '\STRAIGHT\TandemSTRAIGHTmonolithicPackage010'];
+% addpath(STRAIGHTFolder)
+% addpath([function_dir '\myspectrogram'])
 
 %%
 stim1 = string(stimulus_1);
@@ -31,7 +31,7 @@ q = aperiodicityRatioSigmoid(y,rc,1,2,0); % aperiodicity extraction
     f0_in = rc.f0;
     t0_in = rc.temporalPositions;
 
-    th_df = prctile(diff(f0_in),params.th_df);
+    th_df = prctile(abs(diff(f0_in)),params.th_df);
     df0 = nan(size(f0_in));
     df0(1:end-1) = abs(diff(f0_in));
     
@@ -44,11 +44,15 @@ q = aperiodicityRatioSigmoid(y,rc,1,2,0); % aperiodicity extraction
     t0_in(df0>th_df) = nan;
     f0_in(f0score<th_f0score) = nan;
     t0_in(f0score<th_f0score) = nan;
+    
     if ii == 1
-        results_f0 = [f0_in];
-    else
-        results_f0 = [results_f0,f0_in];
+        results_f0 = nan(size(f0_in,1),2);
+%         results_f0 = [f0_in];
+%     else
+%         results_f0 = [results_f0,f0_in];
     end
+    results_f0(:,ii) = f0_in;
+
 %%
 % wav_Pa = y * params.my_cal_factor;
 % smooth_sec = 0.125;  %"FAST" SPL is 1/8th of second.  "SLOW" is 1 second;
@@ -68,7 +72,13 @@ q = aperiodicityRatioSigmoid(y,rc,1,2,0); % aperiodicity extraction
 %         results_db(ii+2) = t0_in;
 %     end  
 end
-delta_pitch = results_f0(:,1)./results_f0(:,2);
-delta_loud = 1; %placeholder
-% delta_loud = results_db(:,1) / results_db(:,2);
+t=t0_in;
+delta_pitch = results_f0(:,2)./results_f0(:,1);
+p1=results_f0(:,1);
+p2=results_f0(:,2);
+
+delta_loud = nan; %placeholder
+l1=nan;
+l2=nan;
+% delta_loud = results_db(:,1) ./ results_db(:,2);
 end
