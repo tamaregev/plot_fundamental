@@ -68,11 +68,9 @@ SPL_dB = 10.0*log10( (wav_env_Pa ./ Pa_ref).^2 ); % 10*log10 because signal is s
         if init_dim > dim1
             baseSPL_dB = nan(init_dim,1);
             baseSPL_dB(1:dim1,1) = SPL_dB;
-            results_db = [results_db,baseSPL_dB];
         elseif init_dim < dim1
             baseSPL_dB = nan(dim1,1);
-            baseSPL_dB(1:init_dim,1) = results_db;
-            results_db = [baseSPL_dB,SPL_dB];
+            baseSPL_dB(1:init_dim,1) = results_dB;
         end
     end  
 end
