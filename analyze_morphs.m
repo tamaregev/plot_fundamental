@@ -11,7 +11,7 @@ varheaders = ["sent","condition","sum_pitch_diff","max_pitch_diff",...
           "sum_loud_diff","max_loud_diff"]; % table headers
 counter = 1; % to keep track of total iterations and row assignment
 
-sent = zeros(81,1);
+sent = strings(81,1);
 condition = strings(81,1);
 sumpitch = zeros(81,1);
 maxpitch = zeros(81,1);
@@ -20,6 +20,7 @@ maxloud = zeros(81,1);
 
 for ii = 1:numel(D) % iterate over every sound file
       currD = D(ii).name; % get the current subdirectory name
+      sent_name = extractAfter(D(ii).name,'sent');
       cd(currD) % enter the subdirectory
       soundfiles = dir('*.wav'); % get all wav files in current subdirectory
 % %% Identify which wav file is the neutral base
@@ -41,7 +42,7 @@ for ii = 1:numel(D) % iterate over every sound file
               [y2,~] = audioread(soundfiles(kk).name);
               [delta_pitch,delta_loud,~,~,~,~,~] = pitch_loud_diff(y1,y2,fs,params,false);
               
-              sent(counter,1) = ii;
+              sent(counter,1) = sent_name;
               cellarray_cond = extractBetween(soundfiles(kk).name,'_','.wav');
               condition(counter,1) = cellarray_cond{1,1};
               sumpitch(counter,1) = nansum(delta_pitch);
