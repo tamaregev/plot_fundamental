@@ -6,7 +6,7 @@ function output = hann_fade(input,ramp_dur_ms,fs)
 
 
 if nargin < 3
-   fs = 41000;
+   fs = 44100;
 end
    
 output = input;

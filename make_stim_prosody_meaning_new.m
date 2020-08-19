@@ -50,7 +50,6 @@ set(h,'units','normalized','outerposition',[0 0 1 1])
         pause(3)
         audiowrite([trim_folder filename(1:end-4) '.wav'],y,fs)
     end
-
 %% Plot f0
 params.th_f0score = 0.8;
 params.th_df = 95;%Hz
@@ -102,7 +101,7 @@ for sent=sentences
     
     synth_out_folder = [stim_folder '/synth_match/Sent' num2str(sent) '/'];
     %load all other sound files, make same length and save to synth match folder:
-    Files = dir([synth_folder, '/*.wav']);
+    Files = dir([synth_in_folder, '/*.wav']);
     for i=1:length(Files)
         [y,fs]=audioread([synth_in_folder Files(i).name]);    
         y=y(1:nsamp);
@@ -110,6 +109,11 @@ for sent=sentences
         audiowrite([synth_out_folder Files(i).name],y,fs)
     end
     
+end
+%check and match that stimuli in synth out folder are the same length
+for sent=sentences
+    synth_out_folder = [stim_folder '/synth_match/Sent' num2str(sent) '/'];
+
     Files = dir([synth_out_folder, '/*.wav']);
     for i=1:length(Files)
         if i==1
@@ -119,16 +123,53 @@ for sent=sentences
         nsamps(i) = length(y);
     end
     nsamp = min(nsamps);
+    disp([num2str(sent) ' before'])
+    disp({Files(:).name})
+    disp(nsamps')
+    for i=1:length(Files)
+        [y,fs]=audioread([synth_out_folder Files(i).name]);    
+        y=y(1:nsamp);        
+        nsamps(i) = length(y);
+        y=hann_fade(y,ramp_dur,fs);
+        audiowrite([synth_out_folder Files(i).name],y,fs)
+    end
+    disp([num2str(sent) ' after'])
+    disp({Files(:).name})
+    disp(nsamps')
+end
+
+%check that stimuli in synth folder are the same length
+for sent=sentences
+    synth_folder = [stim_folder '/synth/Sent' num2str(sent) '/'];
+    %find length of shortest sound file:
+    Files = dir([synth_folder, '/*.wav']);
+    for i=1:length(Files)
+        if i==1
+            nsamps=nan(size(Files));
+        end
+        [y,fs]=audioread([synth_folder Files(i).name]);    
+        nsamps(i) = length(y);
+    end
+    nsamp = min(nsamps);
     disp(sent)
     disp({Files(:).name})
     disp(nsamps')
     
-    
+    for i=1:length(Files)
+        [y,fs]=audioread([synth_folder Files(i).name]);    
+        y=y(1:nsamp);        
+        nsamps(i) = length(y);
+        y=hann_fade(y,ramp_dur,fs);
+        audiowrite([synth_folder Files(i).name],y,fs)
+    end
+    disp([num2str(sent) ' after'])
+    disp({Files(:).name})
+    disp(nsamps')
 end
 %% make synth folder
 for sent = sentences
     synth_folder = [stim_folder '/synth/Sent' num2str(sent) '/'];
-    if ~exist(synth_folder,'dir')
+    if ~exist(  synth_folder,'dir')
         mkdir(synth_folder)
     end   
 end
@@ -188,3 +229,9 @@ MorphingMenu
 % I morphed 100  
 folder = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/morphSin/HarmonicContinuum5';
 [h,f0_in,t0_in] = plotf0morphs(params, folder, 'Harmonic Continuum 5');
+%% Make masks
+mask_dir = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/stimuli/all_for_mask';
+nMasks = 10;%how many different masks to make
+nStim = 50;%per mask
+[mask_all] = makeMasks(mask_dir,nMasks,nStim);
+%% 
