@@ -1,4 +1,4 @@
-function [h,f0_in,t0_in] = plotStimF0(y,fs,params, showProcess)
+function [h,f0_in,t0_in] = plotStimF0(y,fs,params, showProcess,gradient)
 % plotStimF0 Calculates fundamental frequency using STRAIGHT, cleans it and plots signal+f0+spectrogram
 % 
 % Uses: STRAIGHT (Hideki Kawahara)
@@ -12,8 +12,8 @@ function [h,f0_in,t0_in] = plotStimF0(y,fs,params, showProcess)
 %               params.th_df = 95;%Percentile maximal f0 jump for plotting f0
 %               params.conv = 5;
 %
-%           showProcess is an optional logical varible. If showProcess = true a graph showing the f0 cleaning process will be displayed. Default: true. 
-
+%           showProcess is an optional logical flag. If showProcess = true a graph showing the f0 cleaning process will be displayed. Default: true. 
+%           gradient is an optional logical flag. If gradient = true, the f0 graph is colored graded due to the f0 score 
 
 %
 % June 2020, Tamar Regev, initial version
@@ -22,17 +22,24 @@ function [h,f0_in,t0_in] = plotStimF0(y,fs,params, showProcess)
 %                    input params subfield params.th_f0power replaced by params.th_f0score 
 %                - Added plot to show process of f0 cleaning + optional
 %                input variable showProcess
-% 
+% July 6 2020, Tamar Regev
+%                - Added gradient variable
+% Aug 11 2020, Tamar Regev
+%               - Fixed bug added abs in th_df=prctile(abs(diff(f0_in)),params.th_df);
+
 %% Definitions
-function_dir = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/GitHub/plot_fundamental';
-STRAIGHTFolder = [function_dir '/STRAIGHT/TandemSTRAIGHTmonolithicPackage010'];
-addpath(STRAIGHTFolder)
-addpath([function_dir '/myspectrogram'])
+function_dir = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/GitHub/prosody_meaning';
+addpath(genpath(function_dir))
 
 if ~exist('showProcess','var')
     showProcess=true;
 end
-    
+
+if ~exist('gradient','var')
+    gradient=true;
+end
+
+
 %% Analysis
 t = (0:length(y)-1)/fs;
 
@@ -54,9 +61,8 @@ t0_in=rc.temporalPositions;
 %select areas with high f0 score   
 th_f0score =  params.th_f0score;%typically 0.75
 
-
 %select areas with big jumps:
-th_df=prctile(diff(f0_in),params.th_df);
+th_df=prctile(abs(diff(f0_in)),params.th_df);
 df0=nan(size(f0_in));
 df0(1:end-1)=abs(diff(f0_in));
 
@@ -91,8 +97,11 @@ f0_in(df0>th_df)=nan;
 t0_in(df0>th_df)=nan;
 f0_in(f0score<th_f0score)=nan;
 t0_in(f0score<th_f0score)=nan;
-    
 
+% map score range to 0-1
+colors = f0score;colors(f0score<th_f0score)=nan;
+colors=colors-params.th_f0score;colors=0.8*colors/(1-params.th_f0score)+0.2;
+colors = 1-colors;
 %% plot
     h=figure;
     
@@ -103,9 +112,15 @@ t0_in(f0score<th_f0score)=nan;
     %%% plot fundamental 
     subplot(3,1,2)
     %plot(t0_in,f0_in,'.');grid on
-    semilogy(t0_in,f0_in,'.');grid on
+    %colormap(gca,'gray')
+    if gradient
+        scatter(t0_in,f0_in,15,[colors colors colors],'filled');grid on
+    else
+        scatter(t0_in,f0_in,15,[colors colors colors],'filled');grid on    
+    end
+    set(gca,'yscale','log')    
     ylabel('f0 (Hz)');
-    ylim([100 350])
+    ylim([50 400])
     xlim([0 t(end)])
     set(gca,'fontsize',14)
     
@@ -114,7 +129,7 @@ t0_in(f0score<th_f0score)=nan;
     [hs, T, F] = myspectrogram(y, fs, [22 1], @hamming, 2048, [-59 -1], false, 'default', false, 'per'); % or be quite specific about what you want
     ylim([0 2000])
     xlim([0 t(end)])
-    colormap('parula')
+    colormap(gca,'parula')
     xlabel('Time (s)')
     set(gca,'fontsize',14)
 
