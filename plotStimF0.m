@@ -24,6 +24,9 @@ function [h,f0_in,t0_in] = plotStimF0(y,fs,params, showProcess,gradient)
 %                input variable showProcess
 % July 6 2020, Tamar Regev
 %                - Added gradient variable
+% Aug 11 2020, Tamar Regev
+%               - Fixed bug added abs in th_df=prctile(abs(diff(f0_in)),params.th_df);
+
 %% Definitions
 function_dir = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/GitHub/prosody_meaning';
 addpath(genpath(function_dir))
@@ -59,7 +62,7 @@ t0_in=rc.temporalPositions;
 th_f0score =  params.th_f0score;%typically 0.75
 
 %select areas with big jumps:
-th_df=prctile(diff(f0_in),params.th_df);
+th_df=prctile(abs(diff(f0_in)),params.th_df);
 df0=nan(size(f0_in));
 df0(1:end-1)=abs(diff(f0_in));
 
@@ -110,7 +113,11 @@ colors = 1-colors;
     subplot(3,1,2)
     %plot(t0_in,f0_in,'.');grid on
     %colormap(gca,'gray')
-    scatter(t0_in,f0_in,15,[colors colors colors],'filled');grid on
+    if gradient
+        scatter(t0_in,f0_in,15,[colors colors colors],'filled');grid on
+    else
+        scatter(t0_in,f0_in,15,[colors colors colors],'filled');grid on    
+    end
     set(gca,'yscale','log')    
     ylabel('f0 (Hz)');
     ylim([50 400])

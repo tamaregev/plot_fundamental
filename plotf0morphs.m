@@ -19,6 +19,8 @@ function [h,f0_in,t0_in] = plotf0morphs(params, folder, tag)
 % June 22, 2020 Julie Meng
 % July 8, 2020 Tamar Regev: changed inputs such that folder is the full
 % folder and tag is the title for the figure.
+% Aug 11 2020, Tamar Regev
+%               - Fixed bug added abs in th_df=prctile(abs(diff(f0_in)),params.th_df);
 
 %% Definitions
 function_dir = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/GitHub/prosody_meaning';
@@ -61,7 +63,7 @@ for index = 1:length(FileNames)
     th_f0score = params.th_f0score;%typically 0.75
 
     %select areas with big jumps:
-    th_df=prctile(diff(f0_in),params.th_df);
+    th_df=prctile(abs(diff(f0_in)),params.th_df);
     df0=nan(size(f0_in));
     df0(1:end-1)=abs(diff(f0_in));
 
@@ -86,6 +88,7 @@ for index = 1:length(FileNames)
     elseif index == length(FileNames)
         semilogy(t0_in,f0_in,'.')
         ylabel('f0 (Hz)');
+        xlabel('Time (s)')
         ylim([100 450])
         xlim([0 t(end)])
         title(strrep(tag, "_", " "))

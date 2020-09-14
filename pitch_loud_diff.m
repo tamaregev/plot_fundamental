@@ -1,4 +1,6 @@
+
 function [delta_pitch, delta_loud, p1, p2, t_p, l1, l2, t_l] = pitch_loud_diff(y1,y2,fs,params,plotFlag)
+
 % INPUTS:
 %         y1, y2 are column sound signals, must be same length
 %         fs is the sample rate
@@ -14,10 +16,12 @@ if ~exist('plotFlag','var')
     plotFlag = true;
 end
 
+
 % function_dir = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/GitHub/prosody_meaning/';
 % STRAIGHTFolder = [function_dir '/STRAIGHT/TandemSTRAIGHTmonolithicPackage010'];
 % addpath(STRAIGHTFolder)
 % addpath([function_dir '/myspectrogram'])
+
 
 %%
 stimuli = [y1, y2];
@@ -74,6 +78,7 @@ for ii = 1:2
         l2 = SPL_dB;
     end  
 end
+
 t_l = 0:1/fs:(length(l1)-1)/fs;t_l=t_l';
 t_p = t0_in;
 t_p_all = rc.temporalPositions;
@@ -84,6 +89,7 @@ tol = 0.01;
 t_l(ismembertol(t_l,nan_times,tol)) = nan;
 l1(isnan(t_l)) = nan;
 l2(isnan(t_l)) = nan;
+
 
 if plotFlag % plotting loudness trajectories
         figure;
