@@ -87,26 +87,32 @@ l2(isnan(t_l)) = nan;
 
 if plotFlag % plotting loudness trajectories
         figure;
-        subplot(3,1,1);
-        t_sec = ([1:size(y1)]-1)/fs;
-        plot(t_sec,y1);
-        xlabel('Time (sec)');
-        ylabel('Pressure (Pa)');
-        xlim([0 3])
+%         subplot(3,1,1);
+         t_sec = ([1:size(y1)]-1)/fs;
+%         plot(t_sec,y1);
+%         xlabel('Time (sec)');
+%         ylabel('Pressure (Pa)');
+%         xlim([0 3])
         
-        subplot(3,1,2)
-        plot(t_sec,l1);
+        subplot(2,1,1)
+        plotter = plot(t_sec,l1);
+        plotter.LineWidth = 2;
         xlabel('Time (sec)');
         ylabel('SPL (dB)');
         yl=ylim;ylim(yl(2)+[-80 0]);
         hold all
-        plot(t_sec,l2);
+        plotter = plot(t_sec,l2);
+        plotter.LineWidth = 2;
         xlim([0 3])
         
-        subplot(3,1,3)
-        plot(t_p,p1);
+        subplot(2,1,2)
+        plotter = plot(t_p,p1);
+        plotter.LineWidth = 2;
+        ylim([100 400])
+        ylabel('Fundamental Frequency (Hz)');
         hold all
-        plot(t_p,p2);
+        plotter = plot(t_p,p2);
+        plotter.LineWidth = 2;
         xlim([0 3])
         
 end
