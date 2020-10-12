@@ -88,6 +88,10 @@ tol = 0.01;
 t_l(ismembertol(t_l,nan_times,tol)) = nan;
 l1(isnan(t_l)) = nan;
 l2(isnan(t_l)) = nan;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6d7e77c008a54d05339b7ce141e96ecd7e5c1c50
 
 if plotFlag % plotting loudness trajectories
         figure;
