@@ -56,6 +56,7 @@ for ii = 1:numel(D) % iterate over every sound file
                     if plotFlag
                         suptitle([strrep(soundfiles(kk).name(1:end-4),'_',' ')]);
                         saveas(gcf,[morphFolder filesep 'figures' filesep soundfiles(kk).name(1:end-4)],'fig')
+                        close
                     end
                     sent(counter,1) = sent_name;
                     condition(counter,1) = condition_name;
