@@ -39,7 +39,8 @@ for ii = 1:2
     f0score = q.f0CandidatesScoreMap(1,:)';
     f0_in = rc.f0;
     t0_in = rc.temporalPositions;
-
+    
+    
     th_df = prctile(abs(diff(f0_in)),params.th_df);
     df0 = nan(size(f0_in));
     df0(1:end-1) = abs(diff(f0_in));
@@ -81,10 +82,11 @@ end
 t_l = 0:1/fs:(length(l1)-1)/fs;t_l=t_l';
 t_p = t0_in;
 t_p_all = rc.temporalPositions;
+dt_p = nanmean(diff(t0_in));
 
 %clean l1, l2 and t_l according to p1, p2 and t_p
 nan_times = t_p_all(isnan(t_p));
-tol = 0.01;
+tol = dt_p;
 t_l(ismembertol(t_l,nan_times,tol)) = nan;
 l1(isnan(t_l)) = nan;
 l2(isnan(t_l)) = nan;
@@ -97,21 +99,26 @@ if plotFlag % plotting loudness trajectories
         xlabel('Time (sec)');
         ylabel('Pressure (Pa)');
         xlim([0 3])
+        set(gca,'fontsize',14)
         
         subplot(3,1,2)
         plot(t_sec,l1);
         xlabel('Time (sec)');
         ylabel('SPL (dB)');
-        yl=ylim;ylim(yl(2)+[-80 0]);
+        yl=ylim;ylim(yl(2)+[-40 0]);
         hold all
         plot(t_sec,l2);
         xlim([0 3])
+        set(gca,'fontsize',14)
         
         subplot(3,1,3)
         plot(t_p,p1);
         hold all
         plot(t_p,p2);
         xlim([0 3])
+        xlabel('Time (sec)');
+        ylabel('F0 (Hz)');
+        set(gca,'fontsize',14)
         
 end
 
