@@ -37,3 +37,12 @@ end
 Cond_coded = zeros(size(Cond));
 Cond_coded(strcmp(Cond,'F'))=1;
 Cond_coded(strcmp(Cond,'No'))=2;
+
+Sent_th = zeros(size(Sent));
+Sent_th(Sent<19)=1;
+
+imagesc(Sent');title('sent')
+imagesc(Sent_th');title('Crit or Fill')
+imagesc(Cond_coded');title('condition')
+imagesc(DMorph');title('morph step diff')
+
