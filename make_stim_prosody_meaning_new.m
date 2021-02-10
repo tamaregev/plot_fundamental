@@ -110,7 +110,7 @@ for sent=sentences
     end
     
 end
-%check and match that stimuli in synth out folder are the same length
+%check and match that stimuli in synth match folder are the same length
 for sent=sentences
     synth_out_folder = [stim_folder '/synth_match/Sent' num2str(sent) '/'];
 
@@ -175,11 +175,10 @@ for sent = sentences
 end
 %% Morph
 % https://memcauliffe.com/straight_workshop/morphing.html
-speaker = 'WP';
-sent = 20;
-synth_folder = [stim_folder speaker '/synth/Sent' num2str(sent) '/'];
+sent = 2;
+synth_folder = [stim_folder '/synth/Sent' num2str(sent) '/'];
 cd(synth_folder)
-morph_folder = [stim_folder speaker '/morph/Sent' num2str(sent) '/'];
+morph_folder = [stim_folder '/morph/Sent' num2str(sent) '/'];
 if ~exist(morph_folder,'dir')
     mkdir(morph_folder)
 end
@@ -229,9 +228,195 @@ MorphingMenu
 % I morphed 100  
 folder = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/morphSin/HarmonicContinuum5';
 [h,f0_in,t0_in] = plotf0morphs(params, folder, 'Harmonic Continuum 5');
-%% Make masks
-mask_dir = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/stimuli/all_for_mask';
+%% Make masks - avg
+mask_dir = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/stimuli/mask_avg';
 nMasks = 10;%how many different masks to make
 nStim = 50;%per mask
-[mask_all] = makeMasks(mask_dir,nMasks,nStim);
-%% 
+[mask_all] = makeMasks_avg(mask_dir,nMasks,nStim);
+
+%% Make masks - pink
+mask_dir = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/stimuli/mask_pink';
+pinkNoise = dsp.ColoredNoise(1,44.1e3,1);
+rng default;
+x = pinkNoise();
+soundsc(x,fs)
+audiowrite([mask_dir filesep 'pink_noise.wav'],x,fs)
+
+%% Fix new synth (ballance acoustics)
+sent=18;
+cond = 'Q';
+ramp_dur = 50; % ms
+suffix = '_balp';
+
+filename_new = ['Syn' num2str(sent) '_' cond suffix '.wav'];
+filename_old = ['Syn' num2str(sent) '_' cond '.wav'];
+synth_raw_folder = [stim_folder '/synth_raw/Sent' num2str(sent) '/'];
+synth_match_folder = [stim_folder '/synth_match/Sent' num2str(sent) '/'];
+synth_folder = [stim_folder '/synth/Sent' num2str(sent) '/'];
+
+cd(synth_raw_folder)
+
+%copy to synth_match
+copyfile([synth_raw_folder filename_new],[synth_match_folder filename_new]);
+cd(synth_match_folder)
+
+%check and match that stimuli in synth match folder are the same length
+[y,fs]=audioread([synth_match_folder filename_new]);    
+nsamps = length(y);
+disp(['new file length = ' num2str(nsamps) ' samps'])
+
+[y,fs]=audioread([synth_match_folder filename_old]);    
+nsamps = length(y);
+disp(['old file length = ' num2str(nsamps) ' samps'])
+
+%calc length of all files in matched folder
+Files = dir([synth_match_folder, '/*.wav']);
+for i=1:length(Files)
+    if i==1
+        nsamps=nan(size(Files));
+    end
+    [y,fs]=audioread([synth_match_folder Files(i).name]);    
+    nsamps(i) = length(y);
+end
+nsamp = min(nsamps);
+disp({Files(:).name})
+disp(nsamps')
+    
+%match their length , applying a hann window
+for i=1:length(Files)
+    [y,fs]=audioread([synth_match_folder Files(i).name]);    
+    y=y(1:nsamp);        
+    nsamps(i) = length(y);
+    y=hann_fade(y,ramp_dur,fs);
+    audiowrite([synth_match_folder Files(i).name],y,fs)
+end
+
+%verify that all have the same length
+disp({Files(:).name})
+disp(nsamps')
+
+%copy into synth folder
+cd(synth_folder)
+copyfile([synth_match_folder filename_new],[synth_folder filename_new]);
+
+%calc length of all files in synth folder
+Files = dir([synth_folder, '/*.wav']);
+for i=1:length(Files)
+    if i==1
+        nsamps=nan(size(Files));
+    end
+    [y,fs]=audioread([synth_folder Files(i).name]);    
+    nsamps(i) = length(y);
+end
+disp({Files(:).name})
+disp(nsamps')
+
+%match their length , applying a hann window
+for i=1:length(Files)
+    [y,fs]=audioread([synth_folder Files(i).name]);    
+    y=y(1:nsamp);        
+    nsamps(i) = length(y);
+    y=hann_fade(y,ramp_dur,fs);
+    audiowrite([synth_folder Files(i).name],y,fs)
+end
+
+%verify that all have the same length
+disp({Files(:).name})
+disp(nsamps')
+
+    %% calculate acoustics of new synth
+filename_neutral = ['Syn' num2str(sent) '_N.wav'];
+
+[y0,fs]=audioread([synth_folder filename_neutral]);    
+[y1,fs]=audioread([synth_folder filename_old]);
+[y2,fs]=audioread([synth_folder filename_new]);
+
+
+params.th_f0score = 0.75; %threshold f0 power for plotting f0
+params.th_df = 95; %Hz maximal f0 jump for plotting f0
+params.conv = 5;
+params.my_cal_factor = 1.0;  %the value for your system to convert the WAV into Pascals
+
+%compare old to N
+[delta_pitch, delta_loud, p1, p2, t_p, l1, l2, t_l] = pitch_loud_diff(y0,y1,fs,params,true);
+suptitle('old')
+dp1=diff(p1);dp2=diff(p2);
+dl1=diff(l1);dl2=diff(l2);
+                                            
+sumpitch(1,1) = nansum(p2-p1);
+maxpitch(1,1) = nanmax(p2-p1);
+sumpitch_O2(1,1) = nansum(abs(dp2)-abs(dp1)); 
+maxpitch_O2(1,1) = nanmax(abs(dp2)-abs(dp1));
+
+sumloud(1,1) = nansum(delta_loud);
+maxloud(1,1) = nanmax(delta_loud);
+sumloud_O2(1,1) = nansum(abs(dl2)-abs(dl1)); 
+maxloud_O2(1,1) = nanmax(abs(dl2)-abs(dl1));
+
+%compare new to N
+[delta_pitch, delta_loud, p1, p2, t_p, l1, l2, t_l] = pitch_loud_diff(y0,y2,fs,params,true);
+suptitle('new')
+
+dp1=diff(p1);dp2=diff(p2);
+dl1=diff(l1);dl2=diff(l2);
+                                            
+sumpitch(2,1) = nansum(p2-p1);
+maxpitch(2,1) = nanmax(p2-p1);
+sumpitch_O2(2,1) = nansum(abs(dp2)-abs(dp1)); 
+maxpitch_O2(2,1) = nanmax(abs(dp2)-abs(dp1));
+
+sumloud(2,1) = nansum(delta_loud);
+maxloud(2,1) = nanmax(delta_loud);
+sumloud_O2(2,1) = nansum(abs(dl2)-abs(dl1)); 
+maxloud_O2(2,1) = nanmax(abs(dl2)-abs(dl1));
+
+condition = {[cond '_old'],[cond '_new']}';
+stepmorph = [4,4]';
+sentence = [sent sent]';
+
+Tb = table(sentence,condition,stepmorph,sumpitch,maxpitch,sumpitch_O2,maxpitch_O2,sumloud,maxloud,sumloud_O2,maxloud_O2)
+
+
+morphFolder = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/stimuli/morph';
+T = readtable([morphFolder filesep 'analysis.csv']);
+T(T.sent==sent & ismember(T.condition,'Q'),:)
+%% test differences statistically
+morphFolder = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/stimuli/morph_balanced';
+T = readtable([morphFolder filesep 'analysis_dp_difference_.csv']);
+maxpitch_Q=T(ismember(T.sent,[1:18]) & ismember(T.condition,'Q') & T.stepmorph==4,:).maxpitch;
+maxpitch_No=T(ismember(T.sent,[1:18]) & ismember(T.condition,'No') & T.stepmorph==4,:).maxpitch;
+maxloud_No=T(ismember(T.sent,[1:18]) & ismember(T.condition,'No') & T.stepmorph==4,:).maxloud;
+maxloud_Q=T(ismember(T.sent,[1:18]) & ismember(T.condition,'Q') & T.stepmorph==4,:).maxloud;
+sent_numbers = T(ismember(T.sent,[1:18]) & ismember(T.condition,'Q') & T.stepmorph==4,:).sent;
+
+[H,P,CI,STATS] = ttest(maxpitch_Q,maxpitch_No)
+[H,P,CI,STATS] = ttest(maxloud_Q,maxloud_No)
+
+%% create a morph4to3 dir
+source = [stim_folder '/morph_balanced'];
+destination = [stim_folder '/morph_balanced_morph4to3'];
+
+copyfile(source, destination)
+
+D=dir(destination);
+D = D(~ismember({D.name}, {'.', '..','.DS_Store','figures'})); % dir returns '.' and '..' (usually in first slot)
+D = D([D.isdir]); %only look at subdirectories
+
+conditions= {'Q','No','F'};
+
+for ifolder = 1:length(D)
+    for icond = 1:length(conditions)
+        subfolder = [D(ifolder).name(5:end) '_' conditions{icond}];
+        morph3 = [destination filesep D(ifolder).name filesep subfolder filesep subfolder '_003.wav']; 
+        morph4 = [destination filesep D(ifolder).name filesep subfolder filesep subfolder '_004.wav'];        
+        copyfile(morph3, morph4)
+    end
+end
+%% listen reversed
+soundsc(y0,fs)
+soundsc(y1,fs)
+soundsc(y2,fs)
+
+soundsc(y0(end:-1:1),fs)
+soundsc(y1(end:-1:1),fs)
+soundsc(y2(end:-1:1),fs)
