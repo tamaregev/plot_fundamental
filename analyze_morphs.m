@@ -1,9 +1,10 @@
 %% current folder should be main folder with subdirectories of synth files
 function_dir = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/GitHub/prosody_meaning';
 addpath(genpath(function_dir))
-cd('/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/stimuli/morph')
-morphFolder = pwd;
-
+morphFolder = '/Users/tamaregev/Dropbox/postdoc/Fedorenko/Prosody/Prosody-meaning/stimuli/morph_balanced';
+cd(morphFolder)
+delta_pitch_tag = 'fraction';%'fraction' or 'difference
+ 
 params.th_f0score = 0.75; %threshold f0 power for plotting f0
 params.th_df = 95; %Hz maximal f0 jump for plotting f0
 params.conv = 5;
@@ -60,9 +61,16 @@ for ii = 1:numel(D) % iterate over every sound file
                     [y2,~] = audioread(soundfiles(kk).name);
                     plotFlag = true;
                     [delta_pitch,delta_loud, p1, p2, t_p, l1, l2, t_l] = pitch_loud_diff(y1,y2,fs,params,plotFlag);
+                    switch delta_pitch_tag
+                        case 'difference'
+                            delta_pitch = p2-p1;%switch to fraction
+                        case 'fraction'
+                            delta_pitch = (p2-p1)./p1;%switch to fraction
+                    end
                     if plotFlag
                         suptitle([strrep(soundfiles(kk).name(1:end-4),'_',' ')]);
                         saveas(gcf,[morphFolder filesep 'figures' filesep soundfiles(kk).name(1:end-4)],'fig')
+                        saveas(gcf,[morphFolder filesep 'figures' filesep soundfiles(kk).name(1:end-4)],'jpg')
                         close
                     end
                     dp1=diff(p1);dp2=diff(p2);
@@ -73,8 +81,8 @@ for ii = 1:numel(D) % iterate over every sound file
                     sent(counter,1) = sent_name;
                     condition(counter,1) = condition_name;
                     stepmorph(counter,1) = current_morph_step{1,1};
-                    sumpitch(counter,1) = nansum(p2-p1);
-                    maxpitch(counter,1) = nanmax(p2-p1);
+                    sumpitch(counter,1) = nansum(delta_pitch);
+                    maxpitch(counter,1) = nanmax(delta_pitch);
                     sumpitch_O2(counter,1) = nansum(abs(dp2)-abs(dp1)); 
                     maxpitch_O2(counter,1) = nanmax(abs(dp2)-abs(dp1));
                     
@@ -84,6 +92,7 @@ for ii = 1:numel(D) % iterate over every sound file
                     maxloud_O2(counter,1) = nanmax(abs(dl2)-abs(dl1));
                     
                     counter = counter + 1;
+                    clear delta_pitch delta_loud
                 end  
             end
             cd('..') % return to submain directory
@@ -95,10 +104,12 @@ end
 T = table(sent,condition,stepmorph,sumpitch,maxpitch,sumpitch_O2,maxpitch_O2,sumloud,maxloud,sumloud_O2,maxloud_O2);
 [ss,I] = sort(T.sent);
 T = T(I,:);
-writetable(T,[morphFolder filesep 'analysis.csv']);
+writetable(T,[morphFolder filesep 'analysis_dp_' delta_pitch_tag '.csv']);
 
 disp(['Done all in ' num2str(toc(tictot)) ])
 
 disp('plotting...')
-plot_results_acoustic_analysis_morphs
+plot_results_acoustic_analysis_morphs(morphFolder, delta_pitch_tag)
+saveas(gcf,[morphFolder filesep 'figures' filesep 'acoustic_diff_dp_' delta_pitch_tag ],'fig')
+saveas(gcf,[morphFolder filesep 'figures' filesep 'acoustic_diff_dp_' delta_pitch_tag ],'jpg')
 disp('done')
